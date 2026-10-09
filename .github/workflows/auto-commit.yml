@@ -1,0 +1,36 @@
+name: Daily Auto Commit
+
+on:
+  schedule:
+    # GitHub Actions 使用 UTC：每天 UTC 00:00 触发 = 北京时间 08:00
+    - cron: "0 0 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  auto-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Append daily log
+        run: |
+          echo "[$(date -u '+%Y-%m-%d %H:%M:%S UTC')] auto commit" >> daily-commit.log
+          git add -A
+
+      - name: Commit and push
+        run: |
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git commit -m "daily auto commit $(date -u '+%Y-%m-%d %H:%M:%S')"
+          git push
